@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 
+
 const ttSchema = new mongoose.Schema({
     paper_name: {
         type: String,
@@ -8,6 +9,10 @@ const ttSchema = new mongoose.Schema({
     course: {
         type: String,
         required: true
+    },
+    totalmarks: {
+        type: String,
+        required: true,
     },
     no_of_questions: {
         type: String,
@@ -21,6 +26,42 @@ const ttSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    questions: [
+        {
+            question: {
+                type: String
+            },
+            selectedType: {
+                type: String
+            },
+            ans: {
+                type: String
+            },
+            marks: {
+                type: String
+            },
+            negativemarks: {
+                type: String
+            }
+        }
+    ],
+    marking_scheme_instructions: {
+        type: String
+    }
+    , status: {
+        type: String,
+        default: "saved"
+    },
+    conduct_time: {
+        type: Date
+    }
+    , time: {
+        type: Date,
+        default: Date.now
+    }
 })
+
+
+
 
 module.exports = mongoose.model("TESTS", ttSchema)
