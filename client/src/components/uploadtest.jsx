@@ -1,15 +1,16 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 Modal.setAppElement("#root");
 import { useAuth } from "../contexts/AuthContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const editTestDetails = (id) => {};
-
+const notify = () => toast.success("Test is live now!");
 const TESTDETAILS = ({ item }) => {
-  const { UpdateTestDetail, deleteTest } = useAuth();
+  const { UpdateTestDetail, deleteTest, Conducttest } = useAuth();
 
   const deleteTestDetail = (id) => {
     let userConfirmed = confirm("Do you want to delete this test?");
@@ -17,9 +18,19 @@ const TESTDETAILS = ({ item }) => {
       deleteTest(id);
     }
   };
+
+  const ConductTest = (id) => {
+    let userConfirmed = confirm("Do you want to conduct this test?");
+    if (userConfirmed) {
+      Conducttest(id);
+      notify();
+    }
+  };
+
   const initialValuestd = {
     papername: `${item.paper_name}`,
     course: `${item.course}`,
+    totalmarks: `${item.totalmarks}`,
     examduration: `${item.exam_duration}`,
     noofquestions: `${item.no_of_questions}`,
     noofsections: `${item.no_of_sections}`
@@ -42,6 +53,7 @@ const TESTDETAILS = ({ item }) => {
   const testSchema = Yup.object({
     papername: Yup.string().required("Please enter paper name"),
     course: Yup.string().required("Please enter course name"),
+    totalmarks: Yup.string().min(1).max(3).required("Please enter total marks"),
     examduration: Yup.string().required("Please enter exam duration"),
     noofquestions: Yup.string()
       .min(1)
@@ -59,7 +71,6 @@ const TESTDETAILS = ({ item }) => {
     onSubmit: (values) => {
       values.id = item._id;
       UpdateTestDetail(values);
-
       closeModalU();
     }
   });
@@ -69,6 +80,7 @@ const TESTDETAILS = ({ item }) => {
       <tr key={item._id}>
         <td>{item.paper_name}</td>
         <td>{item.course}</td>
+        <td>{item?.totalmarks}</td>
         <td>{item.exam_duration}</td>
         <td>{item.no_of_questions}</td>
         <td>{item.no_of_sections}</td>
@@ -92,6 +104,15 @@ const TESTDETAILS = ({ item }) => {
           <Link to={`/uploadquestions/${item._id}`}>
             <i className="fa-solid fa-file-circle-plus text-green-600"></i>
           </Link>
+        </td>
+        <td>
+          <button
+            className="btn-cdt"
+            onClick={() => {
+              ConductTest(item._id);
+            }}>
+            Conduct
+          </button>
         </td>
       </tr>
       <Modal
@@ -139,6 +160,22 @@ const TESTDETAILS = ({ item }) => {
             name="course"
             placeholder="Course"
             value={values.course}
+            onChange={handleChange}
+          />
+          <label className="text-sm flex items-center" htmlFor="course">
+            <i className="fa-solid fa-square-check mr-1"></i>Total Marks
+          </label>
+          <input
+            className={
+              errors.totalmarks && touched.totalmarks
+                ? "bg-ffeeee border-red-500 inpt-pt npt"
+                : "bg-white inpt-pt npt"
+            }
+            id="totalmarks"
+            type="text"
+            name="totalmarks"
+            placeholder="Total marks"
+            value={values.totalmarks}
             onChange={handleChange}
           />
           <label className="text-sm flex items-center" htmlFor="noofquestions">
@@ -222,14 +259,28 @@ const customStyles = {
 const initialValues = {
   papername: "",
   course: "",
+  totalmarks: "",
   examduration: "",
   noofquestions: "",
   noofsections: ""
 };
 
 export default function UploadTest() {
-  const { testdetails, tests, UpdateTestDetail } = useAuth();
+  const {
+    testdetails,
+    tests,
+    UpdateTestDetail,
+    isLoggedIn,
+    admin,
+    Adminlogout
+  } = useAuth();
   const [modalIsOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return navigate("/adminlogin");
+    }
+  }, [isLoggedIn]);
 
   function openModal() {
     setIsOpen(true);
@@ -249,6 +300,7 @@ export default function UploadTest() {
   const testSchema = Yup.object({
     papername: Yup.string().required("Please enter paper name"),
     course: Yup.string().required("Please enter course name"),
+    totalmarks: Yup.string().min(1).max(3).required("Please enter total marks"),
     examduration: Yup.string().required("Please enter exam duration"),
     noofquestions: Yup.string()
       .min(1)
@@ -280,22 +332,20 @@ export default function UploadTest() {
           </Link>
           <Link to="/uploadtest">
             <div className="p-6 mid-txt gh text-xl">
-              <i className="fa-solid fa-file-pen mr-2"></i>Edit Tests
-            </div>
-          </Link>
-          <Link to="/uploadtest">
-            <div className="p-6 last-txt mh text-xl">
-              <i className="fa-solid fa-hourglass-start mr-2"></i> Conduct Tests
+              <i className="fa-solid fa-chart-simple mr-1"></i>Analytics
             </div>
           </Link>
         </div>
         <div className="right">
           <div className="flex justify-between items-center kh">
             <h2 className="p-3 text-2xl font-bold">Upload Tests</h2>
-            <button className="btn-lgt">
-              <i className="fa-solid fa-arrow-right-from-bracket mr-1"></i>
-              Logout
-            </button>
+            <div className="flex items-center">
+              <div className="admin-txt">Welcome {admin?.username}</div>
+              <button onClick={Adminlogout} className="btn-lgt">
+                <i className="fa-solid fa-arrow-right-from-bracket mr-1"></i>
+                Logout
+              </button>
+            </div>
           </div>
           <div className="tstcd">
             <div className="uft flex justify-between items-center">
@@ -311,12 +361,14 @@ export default function UploadTest() {
                   <tr>
                     <th>Paper name</th>
                     <th>Course</th>
+                    <th>Total Marks</th>
                     <th>Duration</th>
                     <th>No of questions</th>
                     <th>No of section</th>
                     <th>Edit</th>
                     <th>Delete</th>
                     <th>Add questions</th>
+                    <th>Conduct test</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -374,6 +426,22 @@ export default function UploadTest() {
             name="course"
             placeholder="Course"
             value={values.course}
+            onChange={handleChange}
+          />
+          <label className="text-sm flex items-center" htmlFor="course">
+            <i className="fa-solid fa-square-check mr-1"></i>Total Marks
+          </label>
+          <input
+            className={
+              errors.totalmarks && touched.totalmarks
+                ? "bg-ffeeee border-red-500 inpt-pt npt"
+                : "bg-white inpt-pt npt"
+            }
+            id="totalmarks"
+            type="text"
+            name="totalmarks"
+            placeholder="Total marks"
+            value={values.totalmarks}
             onChange={handleChange}
           />
           <label className="text-sm flex items-center" htmlFor="noofquestions">
@@ -439,6 +507,7 @@ export default function UploadTest() {
         </form>
       </Modal>
       {/* update data modal   */}
+      <ToastContainer position="bottom-right" />
     </>
   );
 }
