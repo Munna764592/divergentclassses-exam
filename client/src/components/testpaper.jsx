@@ -15,25 +15,25 @@ const QuestionNAT = ({
   const { dataclick } = useAuth();
   const [inputValue, setInputValue] = useState("");
 
-
   useEffect(() => {
     setInputValue(
       answers.find((ans) => ans.q_id === val._id)
         ? answers.find((ans) => ans.q_id === val._id).ans
         : ""
     );
-    
-  }, [answers, dataclick]);
+  }, [answers]);
+
+  // useEffect(()=>{
+  //   const answer = answers.find((ans) => ans.q_id === val._id);
+
+  //   if(answer){
+
+  //   }
+  // },[])
 
   useEffect(() => {
     const answer = answers.find((ans) => ans.q_id === val._id);
-    if (
-      !answer?.ans &&
-      answer?.status !== "red" &&
-      answer?.status !== "purple" &&
-      answer?.status !== "purpleT" &&
-      answer?.status !== "green"
-    ) {
+    if (answer) {
       const updateLocalStorage = (questionId) => {
         const storedData = localStorage.getItem("answers");
         let questionsStatus = storedData ? JSON.parse(storedData) : [];
@@ -45,13 +45,13 @@ const QuestionNAT = ({
         } else {
           questionsStatus.push({ q_id: questionId, ans: "", status: "red" });
         }
-        setTimeout(() => {
-          localStorage.setItem("answers", JSON.stringify(questionsStatus));
-        }, 1000);
+        localStorage.setItem("answers", JSON.stringify(questionsStatus));
+        // setTimeout(() => {
+        // }, 10);
       };
       updateLocalStorage(val._id);
     }
-  }, [answers.length]);
+  }, [val._id]);
 
   const handleButtonClick = (value) => {
     setInputValue((prev) => prev + value);
