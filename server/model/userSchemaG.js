@@ -18,12 +18,11 @@ const userSchemaG = new mongoose.Schema({
         type: String,
     },
     otp: {
-        type: String,
-        required: true
+        type: String
     },
-    isVerifiedEmail:{
-        type:Boolean,
-        default:false
+    isVerifiedEmail: {
+        type: Boolean,
+        default: false
     }
 })
 

@@ -76,8 +76,8 @@ passport.deserializeUser((user, done) => {
 // initial google ouath login
 routes.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 routes.get("/auth/google/callback", passport.authenticate("google", {
-    successRedirect: "http://localhost:5173/test-series",
-    failureRedirect: "http://localhost:5173/login"
+    successRedirect: `${process.env.FRONTEND_URI}/test-series`,
+    failureRedirect: `${process.env.FRONTEND_URI}/login`
 }))
 
 routes.get("/login/sucess", async (req, res) => {
@@ -126,7 +126,7 @@ routes.post('/otpverifyforgot', appcontroller.OtpVerifyForgot)
 routes.post('/resetpassword', appcontroller.ResetPassword)
 
 routes.get('/', appcontroller.basic)
-routes.get('/gettest', middleware.verifyToken, appcontroller.GetTest)
+routes.get('/gettest', appcontroller.GetTest)
 routes.get('/auth-status', middleware.verifyToken, appcontroller.verifyAdmin)
 routes.get('/getuserdata', middlewareuser.verifyToken, appcontroller.verifyUser)
 
