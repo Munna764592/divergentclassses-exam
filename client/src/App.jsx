@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<UploadTest />}></Route>
+        <Route path="/" element={<TestStd />}></Route>
         <Route path="/uploadtest" element={<UploadTest />}></Route>
         <Route path="/adminlogin" element={<AdminLogin />}></Route>
         <Route

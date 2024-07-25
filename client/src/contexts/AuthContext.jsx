@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     Gettest();
-  }, [tests]);
+  }, []);
 
   const testdetails = async ({
     papername,

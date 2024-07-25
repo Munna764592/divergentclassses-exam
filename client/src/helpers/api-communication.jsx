@@ -275,16 +275,16 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const otpForgot = async(email)=>{
+export const otpForgot = async (email) => {
   try {
     const res = await axios.post("/otpforgot", {
-      email,
+      email
     });
     return res.data;
   } catch (error) {
     console.log(error.message);
   }
-}
+};
 export const OTPverifyforgot = async (otp, tempemail) => {
   try {
     const res = await axios.post("/otpverifyforgot", {
@@ -297,22 +297,22 @@ export const OTPverifyforgot = async (otp, tempemail) => {
   }
 };
 export const ResetPassword = async (npassword, cpassword, id) => {
-    try {
-      const res = await axios.post("/resetpassword", {
-        npassword,
-        cpassword,
-        id
-      });
-      return res.data;
-    } catch (error) {
-      console.log(error.message);
-    }
+  try {
+    const res = await axios.post("/resetpassword", {
+      npassword,
+      cpassword,
+      id
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error.message);
+  }
 };
 // paste backend link here
 export const LoginWithGoogle = async () => {
   try {
     const res = window.open(
-      "http://localhost:5000/auth/google/callback",
+      `${import.meta.env.VITE_BACKEND_URL}/auth/google/callback`,
       "_self"
     );
     const data = await res.data;
