@@ -40,16 +40,22 @@ export const AuthProvider = ({ children }) => {
   const [otpResend, setOtpResend] = useState(null);
   const [errorL, setErrorL] = useState(null);
   const [ErrorReset, setErrorReset] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkStatus() {
-      const data = await checkAuthStatus();
-      if (data) {
-        setAdmin({
-          username: data.username,
-          id: data.id
-        });
-        setIsLoggedIn(true);
+      try {
+        const data = await checkAuthStatus();
+        if (data) {
+          setAdmin({
+            username: data.username,
+            id: data.id
+          });
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+      } finally {
+        setLoading(false);
       }
     }
     checkStatus();
@@ -78,9 +84,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     async function Gettest() {
-      const data = await GetTest();
-      if (data) {
-        setTests(data);
+      try {
+        const data = await GetTest();
+        if (data) {
+          setTests(data);
+          // console.log(data);
+        }
+      } catch (err) {
+      } finally {
+        setLoading(false);
       }
     }
     Gettest();
@@ -94,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     noofsections,
     examduration
   }) => {
-    await CreateTest(
+    const res = await CreateTest(
       papername,
       course,
       totalmarks,
@@ -102,6 +114,10 @@ export const AuthProvider = ({ children }) => {
       noofsections,
       examduration
     );
+
+    if (res) {
+      // GetTest();
+    }
   };
 
   const UpdateTestDetail = async ({
@@ -274,6 +290,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        loading,
         testdetails,
         dataclick,
         tests,

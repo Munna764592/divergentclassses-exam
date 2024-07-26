@@ -7,6 +7,7 @@ Modal.setAppElement("#root");
 import { useAuth } from "../contexts/AuthContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SpinnerLoaderW from "./spinnerloaderW";
 
 const notify = () => toast.success("Test is live now!");
 const TESTDETAILS = ({ item }) => {
@@ -275,12 +276,6 @@ export default function UploadTest() {
     Adminlogout
   } = useAuth();
   const [modalIsOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return navigate("/adminlogin");
-    }
-  }, [isLoggedIn]);
 
   function openModal() {
     setIsOpen(true);
@@ -372,9 +367,13 @@ export default function UploadTest() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tests?.map((item) => {
-                    return <TESTDETAILS key={item._id} item={item} />;
-                  })}
+                  {tests ? (
+                    tests.map((item) => (
+                      <TESTDETAILS key={item._id} item={item} />
+                    ))
+                  ) : (
+                    <SpinnerLoaderW />
+                  )}
                 </tbody>
               </table>
             </div>

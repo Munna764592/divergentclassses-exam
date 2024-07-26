@@ -10,13 +10,20 @@ import LoginSignup from "./components/login";
 import ResetPassword from "./components/resetpassword";
 import Result from "./components/result";
 import Analytics from "./components/analytics";
+import { PrivateRoute } from "./components/PrivateRoute";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<TestStd />}></Route>
-        <Route path="/uploadtest" element={<UploadTest />}></Route>
+        <Route
+          path="/uploadtest"
+          element={
+            <PrivateRoute>
+              <UploadTest />
+            </PrivateRoute>
+          }></Route>
         <Route path="/adminlogin" element={<AdminLogin />}></Route>
         <Route
           path="/uploadquestions/:id"
