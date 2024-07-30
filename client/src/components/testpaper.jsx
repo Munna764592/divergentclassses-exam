@@ -12,46 +12,38 @@ const QuestionNAT = ({
   answers,
   handleAnswerChangeMRN
 }) => {
-  const { dataclick } = useAuth();
-  const [inputValue, setInputValue] = useState("");
+  const { dataclick, SETquestion, inputValue, setInputValue } = useAuth();
 
   useEffect(() => {
-    setInputValue(
-      answers.find((ans) => ans.q_id === val._id)
-        ? answers.find((ans) => ans.q_id === val._id).ans
-        : ""
-    );
-  }, [answers]);
+    SETquestion(answers, val);
+  }, [answers, dataclick]);
 
-  // useEffect(()=>{
+  // useEffect(() => {
   //   const answer = answers.find((ans) => ans.q_id === val._id);
-
-  //   if(answer){
-
+  //   if (
+  //     answer?.status !== "red" &&
+  //     answer?.status !== "green" &&
+  //     answer?.status !== "purple" &&
+  //     answer?.status !== "purpleT"
+  //   ) {
+  //     const updateLocalStorage = (questionId) => {
+  //       const storedData = localStorage.getItem("answers");
+  //       let questionsStatus = storedData ? JSON.parse(storedData) : [];
+  //       const existingEntryIndex = questionsStatus.findIndex(
+  //         (item) => item.q_id === questionId
+  //       );
+  //       if (existingEntryIndex >= 0) {
+  //         questionsStatus[existingEntryIndex].status = "red";
+  //       } else {
+  //         questionsStatus.push({ q_id: questionId, ans: "", status: "red" });
+  //       }
+  //       setTimeout(() => {
+  //         localStorage.setItem("answers", JSON.stringify(questionsStatus));
+  //       }, 10);
+  //     };
+  //     updateLocalStorage(val._id);
   //   }
-  // },[])
-
-  useEffect(() => {
-    const answer = answers.find((ans) => ans.q_id === val._id);
-    if (answer) {
-      const updateLocalStorage = (questionId) => {
-        const storedData = localStorage.getItem("answers");
-        let questionsStatus = storedData ? JSON.parse(storedData) : [];
-        const existingEntryIndex = questionsStatus.findIndex(
-          (item) => item.q_id === questionId
-        );
-        if (existingEntryIndex >= 0) {
-          questionsStatus[existingEntryIndex].status = "red";
-        } else {
-          questionsStatus.push({ q_id: questionId, ans: "", status: "red" });
-        }
-        localStorage.setItem("answers", JSON.stringify(questionsStatus));
-        // setTimeout(() => {
-        // }, 10);
-      };
-      updateLocalStorage(val._id);
-    }
-  }, [val._id]);
+  // }, [val._id]);
 
   const handleButtonClick = (value) => {
     setInputValue((prev) => prev + value);
@@ -121,15 +113,11 @@ const QuestionNAT = ({
   );
 };
 
-const Section1 = ({ setActiveSection, data }) => {
-  const { tests, userdata } = useAuth();
+const Section1 = ({ setActiveSection }) => {
+  const { tests, userdata, currentSliceIndex, setCurrentSliceIndex } =
+    useAuth();
   const { id } = useParams();
 
-  useEffect(() => {
-    setCurrentSliceIndex(data);
-  }, [data]);
-
-  const [currentSliceIndex, setCurrentSliceIndex] = useState("0");
   const questionsPerPage = 1;
   const handleNextSlice = () => {
     if (
@@ -199,7 +187,7 @@ const Section1 = ({ setActiveSection, data }) => {
           borderBottom: "1px solid rgb(199, 199, 199)"
         }}>
         <div className="text-sm py-1">
-          Question No. {currentSliceIndex + questionsPerPage}
+          Question No. {Number(currentSliceIndex) + questionsPerPage}
         </div>
       </div>
       <div style={{ height: "55vh", overflowY: "auto" }} className="pb-4">
@@ -395,8 +383,8 @@ const Section3 = ({ setActiveSection }) => {
   );
 };
 
-const ButoonSelect = ({ val, index, onUpdateQuestion }) => {
-  const { clickData } = useAuth();
+const ButoonSelect = ({ val, index }) => {
+  const { clickData, onUpdateQuestion, currentSliceIndex } = useAuth();
   const [activeStatus, setactiveStatus] = useState("nos2");
   const renderStatus = () => {
     switch (activeStatus) {
@@ -418,7 +406,7 @@ const ButoonSelect = ({ val, index, onUpdateQuestion }) => {
         (qs) => qs.q_id === val._id
       )[0]?.status
     );
-  }, [val]);
+  }, [currentSliceIndex, val]);
   return (
     <>
       <button
@@ -461,18 +449,12 @@ export default function TestPaper() {
   function closeModalQ() {
     setIsOpenQ(false);
   }
-  const [sharedData, setSharedData] = useState("");
-  const handleUpdateQuestion = (newdata) => {
-    setSharedData(newdata);
-  };
 
   const [activeSection, setActiveSection] = useState("1");
   const renderSection = () => {
     switch (activeSection) {
       case "1":
-        return (
-          <Section1 data={sharedData} setActiveSection={setActiveSection} />
-        );
+        return <Section1 setActiveSection={setActiveSection} />;
       case "2":
         return <Section2 setActiveSection={setActiveSection} />;
       case "3":
@@ -675,7 +657,6 @@ export default function TestPaper() {
               </span>
             </div>
           </div>
-
           <div>{renderSection()}</div>
         </div>
         <div style={{ width: "20%" }} className="right-ins position-relative">
@@ -760,14 +741,7 @@ export default function TestPaper() {
                   (type) => type.selectedType === renderSecType()
                 )
                 ?.map((val, index) => {
-                  return (
-                    <ButoonSelect
-                      onUpdateQuestion={handleUpdateQuestion}
-                      val={val}
-                      key={index}
-                      index={index}
-                    />
-                  );
+                  return <ButoonSelect val={val} key={index} index={index} />;
                 })}
             </div>
           </div>

@@ -287,9 +287,31 @@ export const AuthProvider = ({ children }) => {
     setdataclick(data);
   };
 
+  const [inputValue, setInputValue] = useState("");
+
+  const SETquestion = (answers, val) => {
+    if (answers.filter((ans) => ans.q_id === val._id)) {
+      var value = answers.filter((ans) => ans.q_id === val._id)[0]?.ans;
+    }
+    setInputValue(
+      value ? answers.filter((ans) => ans.q_id === val._id)[0]?.ans : ""
+    );
+  };
+
+  const [currentSliceIndex, setCurrentSliceIndex] = useState("0");
+  const onUpdateQuestion=(data)=>{
+    setCurrentSliceIndex(data);
+  }
+
   return (
     <AuthContext.Provider
       value={{
+        onUpdateQuestion,
+        currentSliceIndex,
+        setCurrentSliceIndex,
+        setInputValue,
+        SETquestion,
+        inputValue,
         loading,
         testdetails,
         dataclick,
