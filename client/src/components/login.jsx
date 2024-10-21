@@ -58,7 +58,10 @@ const OtpVerify = ({}) => {
             Didn't receive OTP?
             <a
               className=" text-red-600 cursor-pointer"
-              onClick={() => notify()}>
+              onClick={() => {
+                notify();
+                ResendOTPs(tempemail);
+              }}>
               {" "}
               Resend
             </a>
@@ -439,7 +442,7 @@ export default function LoginSignup() {
     if (userlogin) {
       navigate("/test-series");
     }
-  }, []);
+  }, [userlogin]);
   return (
     <div className="flex justify-center items-center h-screen">
       {signUplogin ? (

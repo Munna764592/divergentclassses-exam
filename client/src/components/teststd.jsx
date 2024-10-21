@@ -7,6 +7,8 @@ Modal.setAppElement("#root");
 import { useAuth } from "../contexts/AuthContext";
 import Logo from "../images/DC Dot Logo PNG_edited.png";
 import { format, parseISO } from "date-fns";
+import SpinnerLoaderW from "./spinnerloaderW";
+import SpinnerLoader from "./spinnerloader";
 
 const Profile = ({ userdata }) => {
   const { logout } = useAuth();
@@ -20,6 +22,9 @@ const Profile = ({ userdata }) => {
       }
     };
     document.addEventListener("mousedown", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+    };
   }, []);
 
   function showConfirmation() {
@@ -61,7 +66,7 @@ const Profile = ({ userdata }) => {
             </div>
             <div className="flex items-center tt1">
               <i className="fa-solid fa-user mr-3"></i>
-              <Link>My Profile</Link>
+              <Link to="/profile">My Profile</Link>
             </div>
             <div className="flex items-center my-4 tt1">
               <i className="fa-solid fa-bag-shopping mr-3"></i>
@@ -99,76 +104,148 @@ const DateTime = ({ val }) => {
   return <div className="ml-1"> {formattedDate}</div>;
 };
 
-export default function TestStd() {
-  const { tests, userdata, userlogin } = useAuth();
+const TestStatus = ({ val }) => {
+  const { tests, userdata, userlogin, setTestID, PostResult, btnStatus } =
+    useAuth();
+
+  const studentID = localStorage.getItem("studentID");
 
   return (
     <>
-      <div style={{ height: "100vh" }} className="flex">
-        <div className="left">
-          <a href="https://www.divergentclasses.com/">
-            <div className="p-6 ts-th text-xl flex">
-              <img
-                style={{ height: "25px" }}
-                src={Logo}
-                alt="img"
-                className="mr-1"
-              />
-              Divergent classes
-            </div>
-          </a>
-          <Link to="/test-series">
-            <div className="p-6 mid-txt text-xl gh">
-              <i className="fa-solid fa-file-arrow-up mr-2"></i> Tests
-            </div>
+      <div className="hgts">
+        <div className="flex justify-between">
+          <div className="font-bold">{val.paper_name}</div>
+          <Link
+            style={{
+              backgroundColor:
+                btnStatus?.find((k) => k.PaperID === val._id)?.PaperID ===
+                  val._id &&
+                btnStatus?.find((k) => k.PaperID === val._id)?.Participants
+                  .Students[0].SubmitPaper
+                  ? "#FFC107"
+                  : btnStatus?.find((k) => k.PaperID === val._id)?.PaperID ===
+                      val._id &&
+                    !btnStatus?.find((k) => k.PaperID === val._id)?.Participants
+                      .Students[0].SubmitPaper
+                  ? "#4BB543"
+                  : "#209bd1"
+            }}
+            onClick={() => {
+              setTestID(val._id);
+            }}
+            to={
+              userlogin
+                ? btnStatus?.find((k) => k.PaperID === val._id)?.PaperID ===
+                    val._id &&
+                  btnStatus?.find((k) => k.PaperID === val._id)?.Participants
+                    .Students[0].SubmitPaper
+                  ? `/result/${val._id}`
+                  : `/instructions/${val._id}`
+                : "/login"
+            }
+            className="srt-ts">
+            <i className="fa-solid mr-1"></i>
+            {btnStatus?.find((k) => k.PaperID === val._id)?.PaperID ===
+              val._id &&
+            btnStatus?.find((k) => k.PaperID === val._id)?.Participants
+              .Students[0].SubmitPaper ? (
+              <>
+                <i className="fa-solid fa-square-poll-vertical mr-1"></i>View
+                Result
+              </>
+            ) : btnStatus?.find((k) => k.PaperID === val._id)?.PaperID ===
+                val._id &&
+              !btnStatus?.find((k) => k.PaperID === val._id)?.Participants
+                .Students[0].SubmitPaper ? (
+              <>
+                <i className="fa-solid fa-play mr-1"></i>Resume
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-arrow-right mr-1"></i>Start
+              </>
+            )}
           </Link>
         </div>
-        <div className="right-ts">
-          <div className="flex justify-between items-center kh">
-            <h2 className="p-3 text-2xl font-bold"> Tests</h2>
-            {userlogin ? (
-              <Profile userdata={userdata} />
-            ) : (
-              <Link className="ls-btn" to="/login">
-                Login/Signup
-              </Link>
-            )}
+
+        <div className="flex items-center mt-2 tsrf text-sm">
+          <i className="fa-solid fa-circle-info mr-2"></i>
+          {val.no_of_questions} Questions | {val?.totalmarks} Marks |{" "}
+          {val.exam_duration} Hours
+        </div>
+        <div className="flex items-center mt-2 tsrf text-sm">
+          <i className="fa-solid fa-calendar-days mr-2"></i> Started at{" "}
+          <DateTime val={val} />
+        </div>
+        {/* <div className="flex items-center mt-2 tsrf text-sm">
+          <i className="fa-solid fa-book-open mr-2"></i> View Syllabus
+        </div> */}
+      </div>
+    </>
+  );
+};
+
+export default function TestStd() {
+  const { tests, userdata, userlogin, setTestID, submitStatus, btnStatus } =
+    useAuth();
+
+  useEffect(() => {
+    localStorage.setItem("studentID", userdata._id);
+  }, [userlogin]);
+  return (
+    <>
+      {tests && userdata  ? (
+        <div style={{ height: "100vh" }} className="flex">
+          <div className="left">
+            <a href="https://www.divergentclasses.com/">
+              <div className="p-6 ts-th text-xl flex">
+                <img
+                  style={{ height: "25px" }}
+                  src={Logo}
+                  alt="img"
+                  className="mr-1"
+                />
+                Divergent classes
+              </div>
+            </a>
+            <Link to="/test-series">
+              <div className="p-6 mid-txt text-xl gh">
+                <i className="fa-solid fa-file-arrow-up mr-2"></i> Tests
+              </div>
+            </Link>
           </div>
-          <div className="tstcd">
-            <div className="uft flex justify-between items-center">
-              <div className="uplq text-xl ml-1 font-bold">hello</div>
+          <div className="right-ts">
+            <div
+              style={{ margin: "1.5px 0" }}
+              className="flex justify-between items-center kh">
+              <h2 className="p-3 text-2xl font-semibold"> Tests</h2>
+              {userlogin ? (
+                <Profile userdata={userdata} />
+              ) : (
+                <Link className="ls-btn" to="/login">
+                  Login/Signup
+                </Link>
+              )}
+            </div>
+            {/* <div className="tstcd">
+              <div className="uft flex justify-between items-center">
+                <div className="uplq text-xl ml-1 font-bold">hello</div>
+              </div>
+            </div> */}
+            <div style={{ maxHeight: "70vh", overflow: "auto" }}>
+              {tests ? (
+                tests
+                  .filter((item) => item.status === "live")
+                  .map((val, index) => <TestStatus key={index} val={val} />)
+              ) : (
+                <SpinnerLoaderW />
+              )}
             </div>
           </div>
-          <div style={{ maxHeight: "70vh", overflow: "auto" }}>
-            {tests
-              ?.filter((item) => item.status === "live")
-              .map((val, index) => (
-                <div key={index} className="hgts">
-                  <div className="flex justify-between">
-                    <div className="font-bold">Demo test: {val.paper_name}</div>
-                    <Link
-                      to={userlogin ? `/instructions/${val._id}` : "/login"}
-                      className="srt-ts">
-                      <i className="fa-solid fa-play mr-1"></i> Start
-                    </Link>
-                  </div>
-                  <div className="flex items-center mt-2 tsrf text-sm">
-                    <i className="fa-solid fa-circle-info mr-2"></i>
-                    {val.no_of_questions} Questions | {val?.totalmarks} Marks |{" "}
-                    {val.exam_duration} Hours
-                  </div>
-                  <div className="flex items-center mt-2 tsrf text-sm">
-                    <i className="fa-solid fa-calendar-days mr-2"></i> Started
-                    at <DateTime val={val} />
-                  </div>
-                  <div className="flex items-center mt-2 tsrf text-sm">
-                    <i className="fa-solid fa-book-open mr-2"></i> View Syllabus
-                  </div>
-                </div>
-              ))}
-          </div>
         </div>
-      </div>
+      ) : (
+        <SpinnerLoader />
+      )}
     </>
   );
 }

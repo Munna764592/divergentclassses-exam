@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import axios from "axios";
 import {
   CreateTest,
   GetTest,
@@ -22,7 +23,24 @@ import {
   loginUser,
   otpForgot,
   OTPverifyforgot,
-  ResetPassword
+  ResetPassword,
+  EditProfile,
+  UpdateEmail,
+  UeSendOTP,
+  NEWEmail,
+  NEOSEndOTP,
+  UpdatePropic,
+  CheckSubmitPaper,
+  SubmitETest,
+  ChecksubmitPaperStatus,
+  ShowResult,
+  Uploadsolution,
+  AnswerData,
+  Studentanswer,
+  UpdateansStatus,
+  DeclarePartBresult,
+  scoreAnalytics,
+  ResultpartB
 } from "../helpers/api-communication";
 const AuthContext = createContext(null);
 
@@ -41,8 +59,24 @@ export const AuthProvider = ({ children }) => {
   const [errorL, setErrorL] = useState(null);
   const [ErrorReset, setErrorReset] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [state, setState] = useState();
+  const [refresh, setRefresh] = useState();
+  const [submitStatus, setSubmitStatus] = useState(null);
+  const [btnStatus, setbtnStatus] = useState(null);
+  const [StudentAns, setStudentAns] = useState(null);
+  const PaperID = localStorage.getItem("testId");
+  const StudentID = localStorage.getItem("studentID");
 
   useEffect(() => {
+    async function GetStudentAns() {
+      try {
+        const data = await AnswerData();
+        if (data) {
+          setStudentAns(data);
+        }
+      } catch (err) {}
+    }
+    GetStudentAns();
     async function checkStatus() {
       try {
         const data = await checkAuthStatus();
@@ -59,28 +93,34 @@ export const AuthProvider = ({ children }) => {
       }
     }
     checkStatus();
+  }, []);
 
+  useEffect(() => {
     async function checkUserStatus() {
-      const data = await checkUserLogin();
-      if (data) {
-        setUserdata({
-          email: data.email,
-          id: data.id
-        });
-        setuserlogin(true);
+      try {
+        const data = await checkUserLogin();
+        if (data) {
+          setUserdata(data.data);
+          setuserlogin(true);
+        }
+      } catch (err) {
+      } finally {
+        setLoading(false);
+      }
+
+      try {
+        const data = await getUser();
+        if (data) {
+          setUserdata(data.user);
+          setuserlogin(true);
+        }
+      } catch (err) {
+      } finally {
+        setLoading(false);
       }
     }
     checkUserStatus();
-
-    async function getUserData() {
-      const data = await getUser();
-      if (data) {
-        setUserdata(data.user);
-        setuserlogin(true);
-      }
-    }
-    getUserData();
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     async function Gettest() {
@@ -88,7 +128,20 @@ export const AuthProvider = ({ children }) => {
         const data = await GetTest();
         if (data) {
           setTests(data);
-          // console.log(data);
+          setActiveSection(
+            ["NAT", "MSQ", "MCQ"].filter((type) =>
+              [
+                ...new Set(
+                  data
+                    ?.filter(
+                      (item) => item._id === localStorage.getItem("testId")
+                    )[0]
+                    .questions.map((q) => q.selectedType)
+                    .filter((type) => ["NAT", "MSQ", "MCQ"].includes(type))
+                )
+              ].includes(type)
+            )[0]
+          );
         }
       } catch (err) {
       } finally {
@@ -96,7 +149,36 @@ export const AuthProvider = ({ children }) => {
       }
     }
     Gettest();
+  }, [refresh]);
+  useEffect(() => {
+    const fetchSubmitStatus = async () => {
+      try {
+        const response = await CheckSubmitPaper(PaperID, StudentID);
+        if(response){
+       const { TestID, SubmitPaper } = response.data;
+       setSubmitStatus({ TestID, SubmitPaper });
+        }
+ 
+      } catch (error) {
+        console.error("Error fetching submit status:", error);
+      }
+    };
+
+    fetchSubmitStatus();
   }, []);
+
+  useEffect(() => {
+    const submitPaperStatus = async () => {
+      try {
+        const res = await ChecksubmitPaperStatus(StudentID);
+        setbtnStatus(res.result);
+        console.log(res.result);
+      } catch (error) {
+        console.error("Error fetching submit status:", error);
+      }
+    };
+    submitPaperStatus();
+  }, [StudentID]);
 
   const testdetails = async ({
     papername,
@@ -115,8 +197,8 @@ export const AuthProvider = ({ children }) => {
       examduration
     );
 
-    if (res) {
-      // GetTest();
+    if (res.message) {
+      setRefresh(res.message);
     }
   };
 
@@ -129,7 +211,7 @@ export const AuthProvider = ({ children }) => {
     examduration,
     id
   }) => {
-    await UpdateTest(
+    const res = await UpdateTest(
       papername,
       course,
       totalmarks,
@@ -138,10 +220,16 @@ export const AuthProvider = ({ children }) => {
       examduration,
       id
     );
+    if (res.message) {
+      setRefresh(res.message);
+    }
   };
 
   const deleteTest = async (id) => {
-    await deleteTestDetail(id);
+    const res = await deleteTestDetail(id);
+    if (res.message) {
+      setRefresh(res.message);
+    }
   };
 
   const questions = async ({
@@ -152,7 +240,7 @@ export const AuthProvider = ({ children }) => {
     marks,
     negativemarks
   }) => {
-    await UploadQuestion(
+    const res = await UploadQuestion(
       selectedType,
       ans,
       id,
@@ -160,9 +248,15 @@ export const AuthProvider = ({ children }) => {
       marks,
       negativemarks
     );
+    if (res.message) {
+      setRefresh(res.message);
+    }
   };
   const deletequestion = async (questionid, id) => {
-    await deleteQuestion(questionid, id);
+    const res = await deleteQuestion(questionid, id);
+    if (res.message) {
+      setRefresh(res.message);
+    }
   };
 
   const Updatequestions = async ({
@@ -174,7 +268,7 @@ export const AuthProvider = ({ children }) => {
     marks,
     negativemarks
   }) => {
-    await UpdateQuestion(
+    const res = await UpdateQuestion(
       ans,
       id,
       questionimg,
@@ -183,6 +277,9 @@ export const AuthProvider = ({ children }) => {
       marks,
       negativemarks
     );
+    if (res.message) {
+      setRefresh(res.message);
+    }
   };
 
   const addinstructions = async ({ instructions, id }) => {
@@ -213,7 +310,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     const res = await UserLogout();
     if (res) {
-      window.location.href = "/login";
+      window.location.href = "/test-series";
     }
   };
 
@@ -282,36 +379,331 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const editProfile = async ({
+    name,
+    mobileno,
+    stream,
+    exams,
+    address,
+    _id
+  }) => {
+    const res = await EditProfile(name, mobileno, stream, exams, address, _id);
+    if (res) {
+      setState(res.message);
+    }
+  };
+  const updateEmail = async (email, id) => {
+    const res = await UpdateEmail(email, id);
+    if (res) {
+    }
+  };
+  const [modalIsOpen, setIsOpen] = useState(false);
+  function openModalUE() {
+    setIsOpen(true);
+  }
+  function closeModalUE() {
+    setIsOpen(false);
+  }
+  const [modalIsOpenNE, setIsOpenNE] = useState(false);
+  function openModalNE() {
+    setIsOpenNE(true);
+  }
+  function closeModalNE() {
+    setIsOpenNE(false);
+  }
+  const UEsendOTP = async ({ otp, id }) => {
+    const res = await UeSendOTP(otp, id);
+    if (res.error) {
+      setErrorO(res.error);
+    } else {
+      closeModalUE();
+      openModalNE();
+    }
+  };
+  const [modalIsOpenNEO, setIsOpenNEO] = useState(false);
+  function openModalNEO() {
+    setIsOpenNEO(true);
+  }
+  function closeModalNEO() {
+    setIsOpenNEO(false);
+  }
+
+  const [ErrorExist, setErrorEXIST] = useState();
+  const [newtempemail, setnewtempemail] = useState();
+  const NEWemail = async ({ email, id }) => {
+    const res = await NEWEmail(email, id);
+    if (res.message) {
+      setnewtempemail(res.message);
+      closeModalNE();
+      openModalNEO();
+    } else {
+      setErrorEXIST(res.error);
+    }
+  };
+
+  const NEOsendOTP = async ({ otp, id, email }) => {
+    const res = await NEOSEndOTP(otp, id, email);
+    if (res.error) {
+      setErrorO(res.error);
+    } else {
+      closeModalNEO();
+      setState(res.message);
+    }
+  };
+
   const [dataclick, setdataclick] = useState();
   const clickData = (data) => {
     setdataclick(data);
   };
 
-  const [inputValue, setInputValue] = useState("");
+  const setTestID = (id) => {
+    localStorage.setItem("testId", id);
+  };
+  const [activeSection, setActiveSection] = useState();
+  const [currentSliceIndex, setCurrentSliceIndex] = useState(0);
+  const onUpdateQuestion = (data) => {
+    setCurrentSliceIndex(data);
+  };
+  const [part, setpart] = useState(true);
+  const SubmitPartA = () => {
+    setpart(false);
+  };
+  useEffect(() => {
+    setCurrentSliceIndex(0);
+  }, [activeSection, part]);
 
-  const SETquestion = (answers, val) => {
-    if (answers.filter((ans) => ans.q_id === val._id)) {
-      var value = answers.filter((ans) => ans.q_id === val._id)[0]?.ans;
-    }
-    setInputValue(
-      value ? answers.filter((ans) => ans.q_id === val._id)[0]?.ans : ""
-    );
+  const Updatepropic = async (formData) => {
+    const res = await UpdatePropic(formData);
   };
 
-  const [currentSliceIndex, setCurrentSliceIndex] = useState("0");
-  const onUpdateQuestion=(data)=>{
-    setCurrentSliceIndex(data);
-  }
+  const SubmitTest = async () => {
+    const res = await SubmitETest(PaperID, StudentID);
+    console.log(res);
+    if (res.success) {
+      window.location.href = "/submitpage";
+    }
+  };
+  const [TimeTaken, setTimeTaken] = useState();
+  const [Result, setResult] = useState();
+  const [activesolSection, setactivesolSection] = useState();
+
+  const showResult = async (StudentID, testID) => {
+    try {
+      const res = await ShowResult(testID, StudentID);
+
+      if (res) {
+        setTimeTaken(res.TimeTaken);
+        setResult(res.answerStatus);
+        // console.log(res.answerStatus);
+
+        const data = res.answerStatus.filter((k) => k.selectedType === "MSQ");
+
+        data.forEach((question) => {
+          const { answer, correctAnswer } = question;
+          const allFalse = Object.values(answer).every(
+            (value) => value === false
+          );
+          if (allFalse) {
+            question.status = "skipped";
+            return;
+          }
+          const convertedCorrectAnswer = {};
+          for (let key in correctAnswer) {
+            convertedCorrectAnswer[key] = correctAnswer[key] === "true";
+          }
+
+          let isIncorrect = false;
+          let correctCount = 0;
+          let trueMatchCount = 0;
+
+          for (let key in answer) {
+            if (answer[key] && !convertedCorrectAnswer[key]) {
+              isIncorrect = true;
+              break;
+            }
+            if (answer[key] === convertedCorrectAnswer[key]) {
+              correctCount++;
+              if (answer[key] === true) {
+                trueMatchCount++;
+              }
+            }
+          }
+
+          if (isIncorrect) {
+            question.status = "incorrect";
+          } else if (
+            correctCount > 0 &&
+            correctCount < Object.keys(answer).length
+          ) {
+            question.status = "pcorrect";
+            question.trueMatchCount = trueMatchCount;
+          } else {
+            question.status = "correct";
+          }
+        });
+        setactivesolSection(
+          [...new Set(res.answerStatus.map((item) => item.selectedType))][0]
+        );
+      }
+    } catch (err) {}
+  };
+
+  const UploadSolution = ({ solutionimg, testID, questionID, vidlink }) => {
+    const res = Uploadsolution(solutionimg, testID, questionID, vidlink);
+  };
+
+  const StudentAnswer = async (StudentID, testID) => {
+    try {
+      const res = await Studentanswer(testID, StudentID);
+
+      if (res) {
+        setResult(res.answerStatus);
+        console.log(res.answerStatus);
+
+        const data = res.answerStatus.filter((k) => k.selectedType === "MSQ");
+
+        data.forEach((question) => {
+          const { answer, correctAnswer } = question;
+          const allFalse = Object.values(answer).every(
+            (value) => value === false
+          );
+          if (allFalse) {
+            question.status = "skipped";
+            return;
+          }
+          const convertedCorrectAnswer = {};
+          for (let key in correctAnswer) {
+            convertedCorrectAnswer[key] = correctAnswer[key] === "true";
+          }
+
+          let isIncorrect = false;
+          let correctCount = 0;
+          let trueMatchCount = 0;
+
+          for (let key in answer) {
+            if (answer[key] && !convertedCorrectAnswer[key]) {
+              isIncorrect = true;
+              break;
+            }
+            if (answer[key] === convertedCorrectAnswer[key]) {
+              correctCount++;
+              if (answer[key] === true) {
+                trueMatchCount++;
+              }
+            }
+          }
+
+          if (isIncorrect) {
+            question.status = "incorrect";
+          } else if (
+            correctCount > 0 &&
+            correctCount < Object.keys(answer).length
+          ) {
+            question.status = "pcorrect";
+            question.trueMatchCount = trueMatchCount;
+          } else {
+            question.status = "correct";
+          }
+        });
+        setactivesolSection(
+          [...new Set(res.answerStatus.map((item) => item.selectedType))][0]
+        );
+      }
+    } catch (err) {}
+  };
+
+  const UpdateAnsStatus = async ({
+    ansstatus,
+    studentID,
+    testID,
+    questionID,
+    cmarks
+  }) => {
+    const res = await UpdateansStatus(
+      ansstatus,
+      studentID,
+      testID,
+      questionID,
+      cmarks
+    );
+    if (res) {
+      // StudentAnswer(studentID, testID);
+    }
+  };
+
+  const DeclarePartBResult = async (PaperID) => {
+    const res = await DeclarePartBresult(PaperID);
+  };
+  const [ResultPartB, setResultpartB] = useState();
+  const [scoreData, SetscoreData] = useState();
+  useEffect(() => {
+    const ScoreAnalytics = async () => {
+      const res = await scoreAnalytics();
+      if (res.data) {
+        SetscoreData(res.data);
+      }
+      if (res.data?.find((k) => k.PaperID === PaperID)?.DeclaredresultpartB) {
+      }
+    };
+
+    ScoreAnalytics();
+  }, [localStorage.getItem("testId")]);
+
+  const ResultpartBfun = async (StudentID, PaperID) => {
+    const response = await ResultpartB(StudentID, PaperID);
+
+    if (response) {
+      console.log(response.answerStatus);
+      setResultpartB(response.answerStatus);
+    }
+  };
+
+  const [buttonload, setbuttonload] = useState(false);
 
   return (
     <AuthContext.Provider
       value={{
+        buttonload,
+        setbuttonload,
+        ResultpartBfun,
+        ResultPartB,
+        scoreData,
+        DeclarePartBResult,
+        UpdateAnsStatus,
+        StudentAnswer,
+        StudentAns,
+        UploadSolution,
+        activesolSection,
+        setactivesolSection,
+        TimeTaken,
+        Result,
+        showResult,
+        btnStatus,
+        SubmitTest,
+        submitStatus,
+        part,
+        SubmitPartA,
+        Updatepropic,
+        ErrorExist,
+        NEOsendOTP,
+        modalIsOpenNEO,
+        closeModalNEO,
+        newtempemail,
+        NEWemail,
+        modalIsOpenNE,
+        closeModalNE,
+        modalIsOpen,
+        openModalUE,
+        closeModalUE,
+        UEsendOTP,
+        updateEmail,
+        editProfile,
+        activeSection,
+        setActiveSection,
+        setTestID,
         onUpdateQuestion,
         currentSliceIndex,
         setCurrentSliceIndex,
-        setInputValue,
-        SETquestion,
-        inputValue,
         loading,
         testdetails,
         dataclick,

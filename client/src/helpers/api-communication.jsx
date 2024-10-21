@@ -31,6 +31,14 @@ export const GetTest = async () => {
     console.log(err);
   }
 };
+export const AnswerData = async () => {
+  try {
+    const res = await axios.get("/answerdata");
+    return res.data;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 export const UpdateTest = async (
   papername,
@@ -205,7 +213,6 @@ export const getUser = async () => {
     const response = await axios.get("/login/sucess", {
       withCredentials: true
     });
-
     return response.data;
   } catch (error) {
     console.log(error.message);
@@ -308,6 +315,65 @@ export const ResetPassword = async (npassword, cpassword, id) => {
     console.log(error.message);
   }
 };
+export const EditProfile = async (
+  name,
+  mobileno,
+  stream,
+  exams,
+  address,
+  _id
+) => {
+  try {
+    const res = await axios.post("/editprofile", {
+      name,
+      mobileno,
+      stream,
+      exams,
+      address,
+      _id
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+export const UpdateEmail = async (email, id) => {
+  try {
+    const res = await axios.post("/updateeotp", { email, id });
+
+    return res.data;
+  } catch (err) {
+    console.log(err.message);
+  }
+};
+
+export const UeSendOTP = async (otp, id) => {
+  try {
+    const res = await axios.post("/ueverifyotp", { otp, id });
+
+    return res.data;
+  } catch (err) {
+    console.log(err.message);
+  }
+};
+export const NEWEmail = async (email, id) => {
+  try {
+    const res = await axios.post("/upnewemail", { email, id });
+
+    return res.data;
+  } catch (err) {
+    console.log(err.message);
+  }
+};
+export const NEOSEndOTP = async (otp, id, email) => {
+  try {
+    const res = await axios.post("/newemailotp", { otp, id, email });
+
+    return res.data;
+  } catch (err) {
+    console.log(err.message);
+  }
+};
 // paste backend link here
 export const LoginWithGoogle = async () => {
   try {
@@ -319,5 +385,189 @@ export const LoginWithGoogle = async () => {
     return data;
   } catch (error) {
     console.log(error.message);
+  }
+};
+
+export const UpdatePropic = async (formData) => {
+  try {
+    const response = await axios.post("/updatepropic", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+  }
+};
+export const CheckSubmitPaper = async (PaperID, StudentID) => {
+  try {
+    const response = await axios.get("/checksubmitpaper", {
+      params: {
+        PaperID,
+        studentID: StudentID
+      }
+    });
+    return response;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const ChecksubmitPaperStatus = async (StudentID) => {
+  try {
+    const response = await axios.get("/checkpaperstatus", {
+      params: {
+        studentID: StudentID
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const SubmitETest = async (PaperID, StudentID) => {
+  try {
+    await axios.post(`/submit-examA`, {
+      PaperID,
+      StudentID
+    });
+    const res = await axios.post(`/submit-exam`, {
+      PaperID,
+      StudentID
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const ShowResult = async (PaperID, StudentID) => {
+  try {
+    const response = await axios.get("/showresult", {
+      params: { PaperID, studentID: StudentID }
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const Studentanswer = async (PaperID, StudentID) => {
+  try {
+    const response = await axios.get("/studentanswer", {
+      params: { PaperID, studentID: StudentID }
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const Uploadsolution = async (
+  solutionimg,
+  testID,
+  questionID,
+  vidlink
+) => {
+  try {
+    const response = await axios.post(
+      "/uploadsolution",
+      { solutionimg, testID, questionID, vidlink },
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+  }
+};
+
+export const UpdateansStatus = async (
+  ansstatus,
+  studentID,
+  testID,
+  questionID,
+  cmarks
+) => {
+  try {
+    const response = await axios.post("/updateansstatus", {
+      ansstatus,
+      studentID,
+      testID,
+      questionID,
+      cmarks
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading data:", error);
+  }
+};
+
+export const DeclarePartBresult = async (PaperID) => {
+  try {
+    const response = await axios.post("/declarepartbresult", {
+      PaperID
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading data:", error);
+  }
+};
+
+export const scoreAnalytics = async () => {
+  try {
+    const response = await axios.get("/scoreanalytics");
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading data:", error);
+  }
+};
+
+export const ResultpartB = async (StudentID, PaperID) => {
+  try {
+    const response = await axios.get("/resultpartb", {
+      params: { PaperID, studentID: StudentID }
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const toggleFullscreen = () => {
+  if (!document.fullscreenElement) {
+    // Request full-screen mode
+    const elem = document.getElementById("fullscreen-container"); // Fullscreen the entire document
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      // Firefox
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      // Chrome, Safari, Opera
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      // IE/Edge
+      elem.msRequestFullscreen();
+    }
+  } else {
+    // Exit full-screen mode
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      // Firefox
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      // Chrome, Safari, Opera
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      // IE/Edge
+      document.msExitFullscreen();
+    }
   }
 };

@@ -320,16 +320,13 @@ export default function UploadTest() {
     <>
       <div className="flex main">
         <div className="left">
-          <Link to="/uploadtest">
-            <div className="p-6 text-xl th">
-              <i className="fa-solid fa-file-arrow-up mr-2"></i>Upload Tests
+          <Link to="/studentanalysis">
+            <div className="p-6 mid-txt text-xl th">
+              <i className="fa-solid fa-file-arrow-up mr-2"></i>Students
+              Analysis
             </div>
           </Link>
-          <Link to="/uploadtest">
-            <div className="p-6 mid-txt gh text-xl">
-              <i className="fa-solid fa-chart-simple mr-1"></i>Analytics
-            </div>
-          </Link>
+       
         </div>
         <div className="right">
           <div className="flex justify-between items-center kh">
@@ -372,7 +369,11 @@ export default function UploadTest() {
                       <TESTDETAILS key={item._id} item={item} />
                     ))
                   ) : (
-                    <SpinnerLoaderW />
+                    <tr>
+                      <td>
+                        <SpinnerLoaderW />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>

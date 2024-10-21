@@ -4,6 +4,8 @@ import IMGINS from "../images/Screenshot 2024-07-10 150836.png";
 import { useAuth } from "../contexts/AuthContext";
 import Modal from "react-modal";
 Modal.setAppElement("#root");
+import axios from "axios";
+import { FullScreen, useFullScreenHandle } from "react-full-screen";
 
 const INSTRUCTION = ({ instructionfun }) => {
   const { userdata } = useAuth();
@@ -143,6 +145,7 @@ const INSTRUCTION = ({ instructionfun }) => {
 };
 
 const OtherINSTRUCTION = ({ instructionfun }) => {
+  const handle = useFullScreenHandle();
   const [modalIsOpen, setIsOpen] = useState(false);
   function openModal() {
     setIsOpen(true);
@@ -162,12 +165,33 @@ const OtherINSTRUCTION = ({ instructionfun }) => {
     }
   };
 
-  const { tests } = useAuth();
+  const { tests, userdata } = useAuth();
   const { id } = useParams();
   const [isChecked, setIsChecked] = useState(false);
 
   const handleCheckboxChange = (event) => {
     setIsChecked(event.target.checked);
+  };
+  const [examId, setExamId] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+
+  const handleStartExam = async () => {
+    try {
+      const studentID = localStorage.getItem("studentID");
+      const testID = localStorage.getItem("testId");
+      const duration = 1;
+      const response = await axios.post("/start-exam", {
+        testID,
+        studentID,
+        duration,
+        email: userdata.email
+      });
+
+      setEndTime(response.data.endTime);
+      setExamId(response.data.examId);
+    } catch (error) {
+      console.error("Error starting the exam:", error);
+    }
   };
 
   return (
@@ -229,6 +253,9 @@ const OtherINSTRUCTION = ({ instructionfun }) => {
               if (!isChecked) {
                 e.preventDefault();
                 openModal();
+                handle.enter();
+              } else {
+                handleStartExam();
               }
             }}>
             I am ready to begin
