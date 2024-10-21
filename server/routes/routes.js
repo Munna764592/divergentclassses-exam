@@ -8,6 +8,9 @@ const passport = require("passport")
 const OAuth2Strategy = require("passport-google-oauth2").Strategy
 const userdb = require('../model/userSchemaG')
 const COOKIE_NAME_USER = process.env.COOKIE_NAME_USER;
+const User = require('../model/userSchemaG')
+const MongoStore = require('connect-mongo');
+const session = require('express-session');
 
 
 const routes = express();
@@ -33,6 +36,16 @@ const storage = multer.diskStorage({
     }
 })
 const upload = multer({ storage: storage })
+routes.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.DATABASE_URL }),
+    cookie: { secure: true }
+}));
+
+routes.use(passport.initialize());
+routes.use(passport.session());
 
 passport.use(
     new OAuth2Strategy({
@@ -52,6 +65,7 @@ passport.use(
                         image: profile.photos[0].value
                     });
                     await userE.save();
+                    return done(null, userE)
                 } else {
                     let user = await userdb.findOne({ googleId: profile.id });
                     if (!user) {
@@ -70,8 +84,13 @@ passport.serializeUser((user, done) => {
     done(null, user);
 })
 
-passport.deserializeUser((user, done) => {
-    done(null, user);
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await userdb.findById(id); 
+        done(null, user);
+    } catch (error) {
+        done(error);
+    }
 });
 // initial google ouath login
 routes.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -82,10 +101,15 @@ routes.get("/auth/google/callback", passport.authenticate("google", {
 
 routes.get("/login/sucess", async (req, res) => {
 
-    if (req.user) {
-        res.status(200).json({ message: "user Login", user: req.user })
+    if (req.user && req.user.googleId) {
+        const user = await User.findOne({ googleId: req.user.googleId });
+        if (user) {
+            res.status(200).json({ message: "User login", user: user });
+        } else {
+            res.status(400).json({ message: "User not found in database" });
+        }
     } else {
-        res.status(400).json({ message: "Not Authorized" })
+        res.status(400).json({ message: "Not Authorized" });
     }
 })
 
@@ -99,14 +123,14 @@ routes.post("/logout", (req, res, next) => {
 
         res.clearCookie(COOKIE_NAME_USER, {
             path: "/",
-            signed: true,
+            signed: true, sameSite: 'none',
+            secure: true
         })
     } catch (err) {
         console.log(err)
         return res.status(404).json({ message: "ERROR", cause: err.message })
     }
 })
-
 routes.post('/createtest', middleware.verifyToken, appcontroller.CreateTest)
 routes.post('/updatetest', middleware.verifyToken, appcontroller.UpdateTest)
 routes.post('/deletetest', middleware.verifyToken, appcontroller.DeleteTest)
@@ -124,11 +148,32 @@ routes.post('/userlogin', appcontroller.UserLogin)
 routes.post('/otpforgot', appcontroller.OtpForgot)
 routes.post('/otpverifyforgot', appcontroller.OtpVerifyForgot)
 routes.post('/resetpassword', appcontroller.ResetPassword)
+routes.post('/editprofile', appcontroller.EditProfile)
+routes.post('/updateeotp', appcontroller.UEotp)
+routes.post('/ueverifyotp', appcontroller.UEverifyOTP)
+routes.post('/upnewemail', appcontroller.UpNewEmail)
+routes.post('/newemailotp', appcontroller.NewEmailOTP)
+routes.post('/start-exam', appcontroller.StartExam)
+routes.post('/submit-examA', appcontroller.SubmitExam);
+routes.post('/updatepropic', upload.single('image'), appcontroller.UpdateProPic)
+routes.post('/submit-exam', appcontroller.SubmitPaper);
+routes.post('/uploadsolution', upload.single('solutionimg'), appcontroller.UploadSolution);
+routes.post('/updateansstatus', appcontroller.UpdateAnsStatus);
+routes.post('/declarepartbresult', appcontroller.DeclareResultPartB)
 
 routes.get('/', appcontroller.basic)
 routes.get('/gettest', appcontroller.GetTest)
 routes.get('/auth-status', middleware.verifyToken, appcontroller.verifyAdmin)
 routes.get('/getuserdata', middlewareuser.verifyToken, appcontroller.verifyUser)
+routes.get('/remaining-time', appcontroller.RemainingTime)
+routes.get('/remaining-timeB', appcontroller.RemainingTimeB)
+routes.get('/checksubmitpaper', appcontroller.CheckSubmitPaper)
+routes.get('/checkpaperstatus', appcontroller.Checkpaperstatus)
+routes.get('/showresult', appcontroller.ShowResult)
+routes.get('/studentanswer', appcontroller.StudentAnswer)
+routes.get('/answerdata', appcontroller.AnswerData)
+routes.get('/scoreanalytics', appcontroller.ScoreAnalytics)
+routes.get('/resultpartb', appcontroller.ResultPartB)
 
 
 module.exports = routes;

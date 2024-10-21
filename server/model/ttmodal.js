@@ -35,14 +35,18 @@ const ttSchema = new mongoose.Schema({
                 type: String
             },
             ans: {
-                type: String
+                type: mongoose.Schema.Types.Mixed,
             },
             marks: {
                 type: String
             },
             negativemarks: {
                 type: String
-            }
+            },
+            solution: {
+                type: String
+            },
+            videoSolution: String
         }
     ],
     marking_scheme_instructions: {

@@ -18,11 +18,24 @@ const userSchemaG = new mongoose.Schema({
         type: String,
     },
     otp: {
-        type: String
+        type: String,
+        default: ""
     },
     isVerifiedEmail: {
         type: Boolean,
         default: false
+    },
+    mobileno: {
+        type: String
+    },
+    stream: {
+        type: String
+    },
+    exams: {
+        type: String
+    },
+    address: {
+        type: String
     }
 })
 
